@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // For navigating after login
 import { supabase } from './supabaseClient'; // Import Supabase client
 
-const Login: React.FC = () => {
+interface LoginProps {
+  setIsLoggedIn: React.Dispatch<React.SetStateAction<boolean>>; // Props for setting login state
+}
+
+const Login: React.FC<LoginProps> = ({ setIsLoggedIn }) => {
   const [username, setUsername] = useState<string>(''); // Username state
   const [password, setPassword] = useState<string>(''); // Password state
   const [errorMessage, setErrorMessage] = useState<string>(''); // Error message state
@@ -35,8 +39,11 @@ const Login: React.FC = () => {
         setSuccessMessage('Login successful!');
         console.log('Login successful:', data);
 
-        // Store login status in localStorage (or use context, state management)
+        // Store login status in localStorage
         localStorage.setItem('isLoggedIn', 'true');
+        
+        // Update login state in parent
+        setIsLoggedIn(true);
 
         // Redirect to dashboard after successful login
         navigate('/dashboard');

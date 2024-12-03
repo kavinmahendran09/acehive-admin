@@ -8,11 +8,11 @@ const ContentManagement: React.FC = () => {
   const [subject, setSubject] = useState<string>("");
   const [subjectType, setSubjectType] = useState<string>("Subject");
   const [resourceType, setResourceType] = useState<string>("");
-  const [fileUrls, setFileUrls] = useState<string>(""); // State for file URLs input
+  const [fileUrls, setFileUrls] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
-  const [showSuccessAlert, setShowSuccessAlert] = useState<boolean>(false); // Success alert state
+  const [showModal, setShowModal] = useState<boolean>(false); // Modal visibility state
 
   // Specialisation options based on the degree selected
   const specialisationOptions =
@@ -69,62 +69,57 @@ const ContentManagement: React.FC = () => {
         ]
       : [];
 
-  // Generates tags based on selected parameters
   const generateTags = () => {
     return [year, degree, subject, resourceType].filter(Boolean);
   };
 
-  // Handles form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true); // Set loading to true while processing
+  const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedYear = e.target.value;
+    setYear(selectedYear);
 
-    try {
-      // Split the file URLs input into an array
-      const urls = fileUrls.split(",").map((url) => url.trim());
-
-      // Ensure that subject or elective are set to 'None' if empty
-      const subjectColumn = subject || "None";
-      const electiveColumn = subjectType === "Elective/Language" ? subject : "None";
-
-      // Ensure specialisation is set to 'None' if not selected
-      const specialisationColumn = specialisation || "None";
-
-      const tags = generateTags(); // Generate tags for the resource
-
-      const { data, error } = await supabase.from("resources").insert({
-        title,
-        description,
-        year,
-        degree,
-        specialisation: specialisationColumn,
-        subject: subjectType === "Subject" ? subjectColumn : null,
-        elective: subjectType === "Elective/Language" ? electiveColumn : null,
-        tags, // Tags should be stored as an array
-        resource_type: resourceType,
-        file_urls: urls, // File URLs should be stored as an array
-      });
-
-      if (error) {
-        console.error("Database insert failed:", error.message); // Handle database error
-        throw new Error(error.message);
-      }
-
-      console.log("Resource added:", data); // Log successful upload
-
-      // Show success modal
-      setShowSuccessAlert(true);
-    } catch (error: any) {
-      alert(`Upload failed: ${error.message}`); // Show error message
-    } finally {
-      setLoading(false); // Set loading to false after processing
+    if (selectedYear === "1st Year") {
+      setDegree("");
+      setSpecialisation("");
     }
   };
 
-  // Close the success modal when the user clicks "OK"
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const urls = fileUrls.split(",").map((url) => url.trim());
+      const subjectColumn = subject || "None";
+      const electiveColumn = subjectType === "Elective/Language" ? subject : "None";
+      const degreeColumn = year === "1st Year" ? "None" : degree || "None";
+      const specialisationColumn = year === "1st Year" ? "None" : specialisation || "None";
+      const tags = generateTags();
+
+      const { error } = await supabase.from("resources").insert({
+        title,
+        description,
+        year,
+        degree: degreeColumn,
+        specialisation: specialisationColumn,
+        subject: subjectType === "Subject" ? subjectColumn : null,
+        elective: subjectType === "Elective/Language" ? electiveColumn : null,
+        tags,
+        resource_type: resourceType,
+        file_urls: urls,
+      });
+
+      if (error) throw new Error(error.message);
+
+      setShowModal(true);
+    } catch (error: any) {
+      alert(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleModalClose = () => {
-    setShowSuccessAlert(false);
-    // Reset the form fields
+    setShowModal(false);
     setYear("");
     setDegree("");
     setSpecialisation("");
@@ -138,10 +133,8 @@ const ContentManagement: React.FC = () => {
 
   return (
     <div className="mt-5">
-      {/* Main form */}
       <h3 className="mb-4">Add New Resource</h3>
       <form onSubmit={handleSubmit} className="p-4 border rounded shadow">
-        {/* Row with Year, Degree, Specialisation, and Resource Type */}
         <div className="row mb-3">
           <div className="col-md-3">
             <label htmlFor="year" className="form-label">
@@ -151,7 +144,7 @@ const ContentManagement: React.FC = () => {
               id="year"
               className="form-select"
               value={year}
-              onChange={(e) => setYear(e.target.value)}
+              onChange={handleYearChange}
               required
             >
               <option value="">Select Year</option>
@@ -171,6 +164,7 @@ const ContentManagement: React.FC = () => {
               className="form-select"
               value={degree}
               onChange={(e) => setDegree(e.target.value)}
+              disabled={year === "1st Year"}
               required
             >
               <option value="">Select Degree</option>
@@ -198,7 +192,7 @@ const ContentManagement: React.FC = () => {
               className="form-select"
               value={specialisation}
               onChange={(e) => setSpecialisation(e.target.value)}
-              disabled={!degree}
+              disabled={year === "1st Year"}
               required
             >
               <option value="">Select Specialisation</option>
@@ -229,8 +223,6 @@ const ContentManagement: React.FC = () => {
             </select>
           </div>
         </div>
-
-        {/* Subject and Subject Type Fields */}
         <div className="row mb-3">
           <div className="col-md-6">
             <label htmlFor="subject" className="form-label">
@@ -261,11 +253,9 @@ const ContentManagement: React.FC = () => {
             </select>
           </div>
         </div>
-
-        {/* File URLs and Title */}
         <div className="mb-3">
           <label htmlFor="fileUrls" className="form-label">
-            Enter File URLs (comma-separated)
+            File URLs (comma-separated)
           </label>
           <input
             type="text"
@@ -273,11 +263,9 @@ const ContentManagement: React.FC = () => {
             className="form-control"
             value={fileUrls}
             onChange={(e) => setFileUrls(e.target.value)}
-            placeholder="Enter File URLs"
             required
           />
         </div>
-        
         <div className="mb-3">
           <label htmlFor="title" className="form-label">
             Title
@@ -288,11 +276,9 @@ const ContentManagement: React.FC = () => {
             className="form-control"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter Title"
             required
           />
         </div>
-
         <div className="mb-3">
           <label htmlFor="description" className="form-label">
             Description
@@ -302,58 +288,50 @@ const ContentManagement: React.FC = () => {
             className="form-control"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter Description"
-            rows={3}
             required
-          />
+          ></textarea>
         </div>
-
-        {/* Submit button */}
         <button type="submit" className="btn btn-primary" disabled={loading}>
-          {loading ? "Submitting..." : "Submit"}
+          {loading ? "Uploading..." : "Submit"}
         </button>
       </form>
 
-      {/* Success Modal */}
-      {showSuccessAlert && (
-        <div
-          className="modal fade show"
-          tabIndex={-1}
-          style={{ display: "block" }}
-          aria-labelledby="successModalLabel"
-          aria-hidden="true"
-        >
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title" id="successModalLabel">
-                  Success!
-                </h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  data-bs-dismiss="modal"
-                  aria-label="Close"
-                  onClick={handleModalClose} // Close modal when clicked
-                />
-              </div>
-              <div className="modal-body">
-                Your resource has been successfully added.
-              </div>
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn btn-dark"
-                  data-bs-dismiss="modal"
-                  onClick={handleModalClose} // Close modal when clicked
-                >
-                  OK
-                </button>
-              </div>
+      {/* Bootstrap Modal */}
+      <div
+        className={`modal fade ${showModal ? "show d-block" : "d-none"}`}
+        tabIndex={-1}
+        role="dialog"
+        aria-labelledby="successModal"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="successModal">
+                Success!
+              </h5>
+              <button
+                type="button"
+                className="close"
+                onClick={handleModalClose}
+                aria-label="Close"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div className="modal-body" style={{color:"green"}}>Resource added successfully!</div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleModalClose}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

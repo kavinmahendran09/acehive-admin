@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './supabaseClient'; // Import Supabase client
 import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap is included
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirecting
-import { FaDatabase, FaHome, FaSignOutAlt, FaRedo } from 'react-icons/fa'; // Import React Icons
+import { FaDatabase, FaHome, FaSignOutAlt, FaRedo, FaPlus } from 'react-icons/fa'; // Import React Icons
 import { Circles } from 'react-loader-spinner'; // Import loading spinner (react-loader-spinner)
 import ContentManagement from './ContentManagement';
+import Database from './Database'; // Assuming you have a Database component
 
 const Dashboard: React.FC = () => {
   const [totalCount, setTotalCount] = useState<number>(0); // Total resource count
@@ -12,6 +13,7 @@ const Dashboard: React.FC = () => {
   const [semPapersCount, setSemPapersCount] = useState<number>(0); // Count for Sem Papers
   const [studyMaterialsCount, setStudyMaterialsCount] = useState<number>(0); // Count for Study Materials
   const [loading, setLoading] = useState<boolean>(false); // For loading state
+  const [currentView, setCurrentView] = useState<string>('content'); // State to manage the current view
   const navigate = useNavigate(); // Initialize navigate for redirecting
 
   // Fetch data from Supabase
@@ -86,17 +88,28 @@ const Dashboard: React.FC = () => {
         <div className="bg-dark text-white col-md-2 p-3" style={{ position: 'fixed', top: 0, bottom: 0 }}>
           <ul className="nav flex-column">
             <li className="nav-item mb-3">
-              <a className="nav-link text-white" href="/">
+              <a className="nav-link text-white" href="/" onClick={() => setCurrentView('content')}>
                 <FaHome className="me-2" />
                 Home
               </a>
             </li>
+
+            {/* Add Section */}
             <li className="nav-item mb-3">
-              <a className="nav-link text-white" href="#">
+              <a className="nav-link text-white" href="#" onClick={() => setCurrentView('content')}>
+                <FaPlus className="me-2" />
+                Add
+              </a>
+            </li>
+
+            {/* Database Section */}
+            <li className="nav-item mb-3">
+              <a className="nav-link text-white" href="#" onClick={() => setCurrentView('database')}>
                 <FaDatabase className="me-2" />
                 Database
               </a>
             </li>
+
             <li className="nav-item">
               <a className="nav-link text-white" href="#" onClick={handleLogout}>
                 <FaSignOutAlt className="me-2" />
@@ -202,7 +215,9 @@ const Dashboard: React.FC = () => {
 
           {/* Horizontal line below cards */}
           <hr style={{ border: '1px solid #ddd' }} />
-          <ContentManagement />
+          
+          {/* Conditionally render based on current view */}
+          {currentView === 'content' ? <ContentManagement /> : <Database />}
         </main>
       </div>
     </div>

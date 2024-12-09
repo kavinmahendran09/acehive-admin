@@ -34,6 +34,7 @@ const Database: React.FC = () => {
       } else {
         setTableData(data || []);
         setFilteredData(data || []); // Initially, show all data
+        setFiltersApplied(false); // Reset filters applied state on refresh
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -117,9 +118,9 @@ const Database: React.FC = () => {
       <h2 className="text-center mb-4">Database Table Viewer</h2>
 
       {/* Dropdown to select table */}
-      <div className="d-flex justify-content-center mb-4">
+      <div className="d-flex justify-content-center align-items-center mb-4">
         <select
-          className="form-select w-auto"
+          className="form-select w-auto me-3"
           value={selectedTable}
           onChange={(e) => setSelectedTable(e.target.value)}
         >
@@ -127,6 +128,15 @@ const Database: React.FC = () => {
           <option value="feedback">Feedback</option>
           <option value="collaborations">Collaborations</option>
         </select>
+        <button
+          className="btn btn-success"
+          onClick={() => {
+            fetchTableData(selectedTable); // Refresh data
+            setFiltersApplied(false); // Remove filters applied section
+          }}
+        >
+          Refresh
+        </button>
       </div>
 
       {/* Filters for the 'resources' table */}

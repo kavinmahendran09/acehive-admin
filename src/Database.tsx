@@ -242,7 +242,7 @@ const Database: React.FC = () => {
       {/* No data available message */}
       {!loading && !error && filteredData.length === 0 && (
         <div className="alert alert-info text-center" role="alert">
-          No data available for the selected table.
+          No data available for the selected filters.
         </div>
       )}
     </div>

@@ -1,50 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './supabaseClient'; // Import Supabase client
-import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap is included
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirecting
-import { FaDatabase, FaHome, FaSignOutAlt, FaRedo, FaPlus } from 'react-icons/fa'; // Import React Icons
-import { Circles } from 'react-loader-spinner'; // Import loading spinner (react-loader-spinner)
+import { supabase } from './supabaseClient'; 
+import 'bootstrap/dist/css/bootstrap.min.css'; 
+import { useNavigate } from 'react-router-dom'; 
+import { FaDatabase, FaHome, FaSignOutAlt, FaRedo, FaPlus, FaEdit } from 'react-icons/fa'; 
+import { Circles } from 'react-loader-spinner'; 
 import ContentManagement from './ContentManagement';
-import Database from './Database'; // Assuming you have a Database component
+import Database from './Database'; 
+import Edit from './edit';
 
 const Dashboard: React.FC = () => {
-  const [totalCount, setTotalCount] = useState<number>(0); // Total resource count
-  const [ctPapersCount, setCtPapersCount] = useState<number>(0); // Count for CT Papers
-  const [semPapersCount, setSemPapersCount] = useState<number>(0); // Count for Sem Papers
-  const [studyMaterialsCount, setStudyMaterialsCount] = useState<number>(0); // Count for Study Materials
-  const [loading, setLoading] = useState<boolean>(false); // For loading state
-  const [currentView, setCurrentView] = useState<string>('content'); // State to manage the current view
-  const navigate = useNavigate(); // Initialize navigate for redirecting
+  const [totalCount, setTotalCount] = useState<number>(0); 
+  const [ctPapersCount, setCtPapersCount] = useState<number>(0); 
+  const [semPapersCount, setSemPapersCount] = useState<number>(0); 
+  const [studyMaterialsCount, setStudyMaterialsCount] = useState<number>(0); 
+  const [loading, setLoading] = useState<boolean>(false); 
+  const [currentView, setCurrentView] = useState<string>('content'); 
+  const navigate = useNavigate(); 
 
-  // Fetch data from Supabase
+  
   const fetchResourceCounts = async () => {
     setLoading(true);
 
     try {
-      // Get total count of resources
       const { count: totalCount } = await supabase
         .from('resources')
         .select('*', { count: 'exact' });
 
-      // Get count of CT Papers
       const { count: ctPapersCount } = await supabase
         .from('resources')
         .select('*', { count: 'exact' })
         .eq('resource_type', 'CT Paper');
 
-      // Get count of Sem Papers
       const { count: semPapersCount } = await supabase
         .from('resources')
         .select('*', { count: 'exact' })
         .eq('resource_type', 'Sem Paper');
 
-      // Get count of Study Materials
       const { count: studyMaterialsCount } = await supabase
         .from('resources')
         .select('*', { count: 'exact' })
         .eq('resource_type', 'Study Material');
 
-      // Update the state with fetched counts
       setTotalCount(totalCount || 0);
       setCtPapersCount(ctPapersCount || 0);
       setSemPapersCount(semPapersCount || 0);
@@ -56,16 +52,14 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Fetch data on component mount
   useEffect(() => {
     fetchResourceCounts();
   }, []);
 
-  // Handle logout
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut(); // Log out the user
-      navigate('/'); // Redirect to the login page (adjust the path as necessary)
+      await supabase.auth.signOut(); 
+      navigate('/');
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -107,6 +101,14 @@ const Dashboard: React.FC = () => {
               <a className="nav-link text-white" href="#" onClick={() => setCurrentView('database')}>
                 <FaDatabase className="me-2" />
                 Database
+              </a>
+            </li>
+
+            {/* Edit Database Section */}
+            <li className="nav-item mb-3">
+              <a className="nav-link text-white" href="#" onClick={() => setCurrentView('edit')}>
+                <FaEdit className="me-2" />
+                Edit Database
               </a>
             </li>
 
@@ -217,7 +219,7 @@ const Dashboard: React.FC = () => {
           <hr style={{ border: '1px solid #ddd' }} />
           
           {/* Conditionally render based on current view */}
-          {currentView === 'content' ? <ContentManagement /> : <Database />}
+          {currentView === 'content' ? <ContentManagement /> : currentView === 'database' ? <Database /> : <Edit />}
         </main>
       </div>
     </div>

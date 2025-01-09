@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from './supabaseClient'; // Import Supabase client
-import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap is included
+import { supabase } from './supabaseClient'; 
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 
-// Define a type for table rows
 interface TableRow {
-  [key: string]: any; // Each row is an object with keys as column names and values as any type
+  [key: string]: any; 
 }
 
 const Database: React.FC = () => {
-  const [selectedTable, setSelectedTable] = useState<string>('resources'); // State for selected table
-  const [tableData, setTableData] = useState<TableRow[]>([]); // State for fetched data
-  const [filteredData, setFilteredData] = useState<TableRow[]>([]); // State for filtered data
-  const [loading, setLoading] = useState<boolean>(false); // Loading state
-  const [error, setError] = useState<string>(''); // Error state
+  const [selectedTable, setSelectedTable] = useState<string>('resources');
+  const [tableData, setTableData] = useState<TableRow[]>([]);
+  const [filteredData, setFilteredData] = useState<TableRow[]>([]); 
+  const [loading, setLoading] = useState<boolean>(false); 
+  const [error, setError] = useState<string>(''); 
 
-  // Filter state for 'resources' table
-  const [yearFilter, setYearFilter] = useState<string>(''); // Year filter state
-  const [resourceTypeFilter, setResourceTypeFilter] = useState<string>(''); // Resource Type filter state
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Search query state
+  
+  const [yearFilter, setYearFilter] = useState<string>(''); 
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<string>(''); 
+  const [searchQuery, setSearchQuery] = useState<string>(''); 
 
-  // State to control the display of the "Filters Applied" alert
   const [filtersApplied, setFiltersApplied] = useState<boolean>(false);
 
-  // Function to fetch data from Supabase
   const fetchTableData = async (table: string) => {
     setLoading(true);
     setError('');
@@ -33,8 +30,8 @@ const Database: React.FC = () => {
         setError('Error fetching data from Supabase');
       } else {
         setTableData(data || []);
-        setFilteredData(data || []); // Initially, show all data
-        setFiltersApplied(false); // Reset filters applied state on refresh
+        setFilteredData(data || []); 
+        setFiltersApplied(false); 
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -44,40 +41,34 @@ const Database: React.FC = () => {
     }
   };
 
-  // Fetch data whenever the selected table changes
   useEffect(() => {
     fetchTableData(selectedTable);
   }, [selectedTable]);
 
-  // Function to filter out the 'description' and 'file_urls' columns for the 'resources' table
   const filterColumns = (row: TableRow) => {
     if (selectedTable === 'resources') {
       const filteredRow = { ...row };
-      delete filteredRow.description; // Remove 'description' column
-      delete filteredRow.file_urls; // Remove 'file_urls' column
+      delete filteredRow.description; 
+      delete filteredRow.file_urls; 
       delete filteredRow.id;
       delete filteredRow.tags;
       delete filteredRow.created_at;
       return filteredRow;
     }
-    return row; // No filtering for other tables
+    return row; 
   };
 
-  // Function to apply filters
   const applyFilters = () => {
     let filtered = tableData;
 
-    // Filter by year
     if (yearFilter) {
       filtered = filtered.filter((row) => row.year === yearFilter);
     }
 
-    // Filter by resource type
     if (resourceTypeFilter) {
       filtered = filtered.filter((row) => row.resource_type === resourceTypeFilter);
     }
 
-    // Search filter
     if (searchQuery) {
       filtered = filtered.filter((row) => {
         return row.title && row.title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -85,26 +76,23 @@ const Database: React.FC = () => {
     }
 
     setFilteredData(filtered);
-    setFiltersApplied(true); // Mark filters as applied
+    setFiltersApplied(true); 
   };
 
-  // Function to reset filters
   const resetFilters = () => {
     setYearFilter('');
     setResourceTypeFilter('');
     setSearchQuery('');
     setFilteredData(tableData);
-    setFiltersApplied(false); // Reset filters applied state
+    setFiltersApplied(false); 
   };
 
-  // Real-time search handler
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value;
     setSearchQuery(query);
 
-    // Perform real-time filtering based on the title
     if (query === '') {
-      setFilteredData(tableData); // If search query is empty, show all data
+      setFilteredData(tableData); 
     } else {
       const filtered = tableData.filter((row) =>
         row.title && row.title.toLowerCase().includes(query.toLowerCase())
@@ -131,8 +119,8 @@ const Database: React.FC = () => {
         <button
           className="btn btn-success"
           onClick={() => {
-            fetchTableData(selectedTable); // Refresh data
-            setFiltersApplied(false); // Remove filters applied section
+            fetchTableData(selectedTable);
+            setFiltersApplied(false); 
           }}
         >
           Refresh
@@ -172,7 +160,7 @@ const Database: React.FC = () => {
               className="form-control"
               placeholder="Search by title..."
               value={searchQuery}
-              onChange={handleSearchChange} // Real-time search handling
+              onChange={handleSearchChange} 
             />
           </div>
           <div className="col-auto">
@@ -220,7 +208,6 @@ const Database: React.FC = () => {
           <table className="table table-bordered table-striped table-hover">
             <thead className="table-dark">
               <tr>
-                {/* Dynamically render columns, based on filtered data */}
                 {Object.keys(filterColumns(filteredData[0])).map((column) => (
                   <th key={column}>{column}</th>
                 ))}
